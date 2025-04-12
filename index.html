@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Skin Disease Classifier</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    input[type="file"] {
+      display: block;
+      margin: 20px auto;
+    }
+    button {
+      display: block;
+      margin: 0 auto;
+      padding: 10px 20px;
+      background-color: #3498db;
+      border: none;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    .result {
+      display: none;
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #eafaf1;
+      border-left: 5px solid #2ecc71;
+    }
+    .error {
+      display: none;
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #fdecea;
+      border-left: 5px solid #e74c3c;
+      color: #e74c3c;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Skin Disease Prediction</h2>
+
+  <form id="upload-form">
+    <input type="file" id="image-input" name="file" accept="image/*" required>
+    <button type="submit">Predict</button>
+  </form>
+
+  <div class="result" id="result">
+    <p><strong>Prediction:</strong> <span id="prediction"></span></p>
+    <p><strong>Confidence:</strong> <span id="confidence"></span>%</p>
+  </div>
+
+  <div class="error" id="error-message"></div>
+
+  <script>
+    const form = document.getElementById('upload-form');
+    const resultDiv = document.getElementById('result');
+    const predictionEl = document.getElementById('prediction');
+    const confidenceEl = document.getElementById('confidence');
+    const errorMessage = document.getElementById('error-message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      resultDiv.style.display = 'none';
+      errorMessage.style.display = 'none';
+
+      const fileInput = document.getElementById('image-input');
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+
+      try {
+        const response = await fetch('http://172.31.212.232:4000/predict', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          errorMessage.textContent = errorData.error || 'Something went wrong.';
+          errorMessage.style.display = 'block';
+          console.error('Error:', errorData);
+          return;
+        }
+
+        const data = await response.json();
+        predictionEl.textContent = data.prediction;
+        confidenceEl.textContent = data.confidence;
+        resultDiv.style.display = 'block';
+      } catch (error) {
+        errorMessage.textContent = 'Failed to fetch prediction. Check your network or server.';
+        errorMessage.style.display = 'block';
+        console.error('Fetch Error:', error);
+      }
+    });
+  </script>
+
+</body>
+</html>
